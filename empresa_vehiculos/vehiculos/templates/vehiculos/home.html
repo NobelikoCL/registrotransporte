@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehículos de la Empresa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Vehículos de la Empresa</h1>
+
+        <!-- Lista de Vehículos -->
+        <h2 class="mt-4">Lista de Vehículos</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Matrícula</th>
+                    <th>Modelo</th>
+                    <th>Marca</th>
+                    <th>Chofer</th>
+                    <th>Habilitado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vehiculo in vehiculos %}
+                <tr>
+                    <td ondblclick="editarCampo(this, '{{ vehiculo.id }}', 'matricula')">{{ vehiculo.matricula }}</td>
+                    <td ondblclick="editarCampo(this, '{{ vehiculo.id }}', 'modelo')">{{ vehiculo.modelo }}</td>
+                    <td ondblclick="editarCampo(this, '{{ vehiculo.id }}', 'marca')">{{ vehiculo.marca }}</td>
+                    <td>{{ vehiculo.chofer }}</td>
+                    <td>{{ vehiculo.habilitado }}</td>
+                    <td>
+                        <button onclick="eliminarVehiculo('{{ vehiculo.id }}')" class="btn btn-danger">Eliminar</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Lista de Choferes -->
+        <h2 class="mt-4">Lista de Choferes</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Licencia de Conducir</th>
+                    <th>Habilitado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for chofer in choferes %}
+                <tr>
+                    <td>{{ chofer.nombre }}</td>
+                    <td>{{ chofer.apellido }}</td>
+                    <td>{{ chofer.licencia_conducir }}</td>
+                    <td>{{ chofer.habilitado }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Registros Contables -->
+        <h2 class="mt-4">Registros Contables</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Vehículo</th>
+                    <th>Fecha de Registro</th>
+                    <th>Costo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registro in registros %}
+                <tr>
+                    <td>{{ registro.vehiculo.matricula }}</td>
+                    <td>{{ registro.fecha_registro }}</td>
+                    <td>{{ registro.costo }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- JavaScript para editar y eliminar -->
+    <script>
+    function editarCampo(elemento, vehiculoId, campo) {
+        const valorAnterior = elemento.textContent;
+        elemento.innerHTML = `<input type='text' value='${valorAnterior}' onblur='guardarCambios(this, ${vehiculoId}, "${campo}")' />`;
+        elemento.firstChild.focus();
+    }
+
+    function guardarCambios(inputElement, vehiculoId, campo) {
+        const nuevoValor = inputElement.value;
+        const datos = new FormData();
+        datos.append('campo', campo);
+        datos.append('valor', nuevoValor);
+
+        fetch(`/actualizar-vehiculo/${vehiculoId}/`, {
+            method: 'POST',
+            body: datos,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                inputElement.parentElement.textContent = nuevoValor;
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+
+    function eliminarVehiculo(vehiculoId) {
+        if (confirm("¿Estás seguro de que deseas eliminar este vehículo?")) {
+            fetch(`/eliminar-vehiculo/${vehiculoId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    }
+    </script>
+</body>
+</html>
